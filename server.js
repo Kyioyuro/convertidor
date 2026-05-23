@@ -10,6 +10,7 @@ const {
   ExportPDFParams,
   ExportPDFTargetFormat,
   ExportPDFJob,
+  ExportPDFResult,
   SDKError,
   ServiceUsageError,
   ServiceApiError
@@ -217,7 +218,7 @@ async function convertWithAdobe(pdfBuffer) {
 
     const pdfServicesResponse = await pdfServices.getJobResult({
       pollingURL,
-      resultType: ExportPDFJob
+      resultType: ExportPDFResult
     });
 
     const resultAsset = pdfServicesResponse.result.asset;
@@ -254,7 +255,7 @@ async function convertWithAdobe(pdfBuffer) {
     try {
 
       await fs.unlink(tempInputPath);
-      
+
     } catch {}
   }
 }
