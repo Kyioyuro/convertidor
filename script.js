@@ -5,6 +5,8 @@ const convertButton = document.querySelector("#convert-button");
 const statusMessage = document.querySelector("#status-message");
 const remainingCount = document.querySelector("#remaining-count");
 const proButton = document.querySelector("#pro-button");
+const MAX_FREE_FILE_BYTES = 25 * 1024 * 1024;
+const REQUEST_TIMEOUT_MS = 95000;
 
 let selectedFile = null;
 let remainingFreeConversions = 2;
@@ -22,6 +24,13 @@ function setSelectedFile(file) {
     selectedFile = null;
     fileLabel.textContent = "El archivo debe ser PDF";
     setStatus("Selecciona un archivo con extension .pdf para continuar.", "error");
+    return;
+  }
+
+  if (file.size > MAX_FREE_FILE_BYTES && !isPro) {
+    selectedFile = null;
+    fileLabel.textContent = "El PDF supera 25 MB";
+    setStatus("En el plan gratis usa PDFs de 25 MB o menos.", "error");
     return;
   }
 
@@ -50,6 +59,12 @@ function downloadBlob(blob, fileName) {
   link.click();
   link.remove();
   URL.revokeObjectURL(downloadUrl);
+}
+
+function createRequestTimeout() {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  return { controller, timeoutId };
 }
 
 pdfInput.addEventListener("change", (event) => {
@@ -87,9 +102,10 @@ convertButton.addEventListener("click", async () => {
   }
 
   const format = document.querySelector("input[name='format']:checked").value;
+  const { controller, timeoutId } = createRequestTimeout();
   convertButton.disabled = true;
   convertButton.textContent = "Convirtiendo...";
-  setStatus(`Convirtiendo ${selectedFile.name} a ${format}.`, "neutral");
+  setStatus(`Convirtiendo ${selectedFile.name} a ${format}. Puede tardar hasta 1 minuto.`, "neutral");
 
   try {
     const response = await fetch("/api/convert", {
@@ -99,7 +115,8 @@ convertButton.addEventListener("click", async () => {
         "X-File-Name": encodeURIComponent(selectedFile.name),
         "X-Output-Format": format
       },
-      body: selectedFile
+      body: selectedFile,
+      signal: controller.signal
     });
 
     if (!response.ok) {
@@ -121,8 +138,12 @@ convertButton.addEventListener("click", async () => {
     const serverHint = window.location.protocol === "file:"
       ? " Abre la pagina desde http://localhost:3000 ejecutando npm start."
       : "";
-    setStatus(`${error.message}${serverHint}`, "error");
+    const message = error.name === "AbortError"
+      ? "La conversion tardo demasiado. Prueba con un PDF mas pequeno o con menos paginas."
+      : error.message;
+    setStatus(`${message}${serverHint}`, "error");
   } finally {
+    window.clearTimeout(timeoutId);
     convertButton.disabled = false;
     convertButton.textContent = "Convertir PDF";
   }

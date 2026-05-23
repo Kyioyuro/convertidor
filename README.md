@@ -16,6 +16,9 @@ Abre `http://localhost:3000`.
 - `PORT`: puerto asignado por el hosting.
 - `HOST`: host de escucha. Por defecto usa `0.0.0.0`.
 - `SITE_URL`: dominio publico, por ejemplo `https://tudominio.com`.
+- `MAX_UPLOAD_MB`: tamano maximo de PDF. Por defecto usa `25`.
+- `MAX_PDF_PAGES`: paginas maximas por conversion. Por defecto usa `20`.
+- `CONVERSION_TIMEOUT_MS`: tiempo maximo por conversion. Por defecto usa `85000`.
 
 Ejemplo:
 

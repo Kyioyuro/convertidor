@@ -8,7 +8,9 @@ const { Document, Packer, Paragraph, PageBreak } = require("docx");
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
 const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024;
+const MAX_PDF_PAGES = Number(process.env.MAX_PDF_PAGES || 20);
+const CONVERSION_TIMEOUT_MS = Number(process.env.CONVERSION_TIMEOUT_MS || 85000);
 const STATIC_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -39,6 +41,22 @@ function sendJson(response, statusCode, payload) {
     "Content-Type": "application/json; charset=utf-8"
   });
   response.end(JSON.stringify(payload));
+}
+
+function userError(message, statusCode = 400) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  error.expose = true;
+  return error;
+}
+
+function withTimeout(promise, message) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(userError(message, 408)), CONVERSION_TIMEOUT_MS);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
 
 function getSecurityHeaders() {
@@ -72,7 +90,7 @@ function getRequestBody(request) {
       total += chunk.length;
 
       if (total > MAX_UPLOAD_BYTES) {
-        reject(new Error("El PDF supera el limite de 50 MB."));
+        reject(userError(`El PDF supera el limite de ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`, 413));
         request.destroy();
         return;
       }
@@ -122,6 +140,10 @@ async function convertToDocx(pdfBuffer) {
   const pdf = await loadPdf(pdfBuffer);
   const children = [];
 
+  if (pdf.numPages > MAX_PDF_PAGES) {
+    throw userError(`Este PDF tiene ${pdf.numPages} paginas. Por ahora el limite es ${MAX_PDF_PAGES} paginas por conversion.`);
+  }
+
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const textContent = await page.getTextContent();
@@ -151,6 +173,10 @@ async function renderPdfPages(pdfBuffer, imageFormat) {
   const mime = imageFormat === "jpg" ? "image/jpeg" : "image/png";
   const extension = imageFormat === "jpg" ? "jpg" : "png";
   const images = [];
+
+  if (pdf.numPages > MAX_PDF_PAGES) {
+    throw userError(`Este PDF tiene ${pdf.numPages} paginas. Por ahora el limite es ${MAX_PDF_PAGES} paginas por conversion.`);
+  }
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
@@ -289,7 +315,10 @@ async function handleConversion(request, response) {
     }
 
     if (format === "word") {
-      const docxBuffer = await convertToDocx(pdfBuffer);
+      const docxBuffer = await withTimeout(
+        convertToDocx(pdfBuffer),
+        "La conversion tardo demasiado. Prueba con un PDF mas pequeno o con menos paginas."
+      );
       response.writeHead(200, {
         ...getSecurityHeaders(),
         "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -300,7 +329,10 @@ async function handleConversion(request, response) {
     }
 
     if (format === "jpg" || format === "png") {
-      const images = await renderPdfPages(pdfBuffer, format);
+      const images = await withTimeout(
+        renderPdfPages(pdfBuffer, format),
+        "La conversion tardo demasiado. Prueba con un PDF mas pequeno o con menos paginas."
+      );
 
       if (images.length === 1) {
         response.writeHead(200, {
@@ -325,8 +357,10 @@ async function handleConversion(request, response) {
     sendJson(response, 400, { error: "Formato no soportado." });
   } catch (error) {
     console.error(error);
-    sendJson(response, 500, {
-      error: "No se pudo convertir el PDF. Intenta con otro archivo o un PDF sin proteccion."
+    sendJson(response, error.statusCode || 500, {
+      error: error.expose
+        ? error.message
+        : "No se pudo convertir el PDF. Intenta con otro archivo o un PDF sin proteccion."
     });
   }
 }
