@@ -113,7 +113,8 @@ convertButton.addEventListener("click", async () => {
       headers: {
         "Content-Type": "application/pdf",
         "X-File-Name": encodeURIComponent(selectedFile.name),
-        "X-Output-Format": format
+        "X-Output-Format": format,
+        "X-User-Plan": isPro ? "pro" : "free"
       },
       body: selectedFile,
       signal: controller.signal

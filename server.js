@@ -2,6 +2,7 @@ const http = require("node:http");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
+const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
 const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas");
 const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
 
@@ -174,6 +175,57 @@ async function convertToDocx(pdfBuffer) {
   return Packer.toBuffer(document);
 }
 
+async function convertWithAdobe(pdfBuffer) {
+  const tempInputPath = path.join(__dirname, `temp-${Date.now()}.pdf`);
+  const tempOutputPath = path.join(__dirname, `output-${Date.now()}.docx`);
+
+  try {
+    await fs.writeFile(tempInputPath, pdfBuffer);
+
+    const credentials = PDFServicesSdk.Credentials
+      .servicePrincipalCredentialsBuilder()
+      .withClientId(process.env.PDF_SERVICES_CLIENT_ID)
+      .withClientSecret(process.env.PDF_SERVICES_CLIENT_SECRET)
+      .build();
+
+    const executionContext =
+      PDFServicesSdk.ExecutionContext.create(credentials);
+
+    const inputAsset = PDFServicesSdk.FileRef.createFromLocalFile(
+      tempInputPath,
+      PDFServicesSdk.MediaType.PDF
+    );
+
+    const exportPDFOperation =
+      PDFServicesSdk.ExportPDF.Operation.createNew(
+        PDFServicesSdk.ExportPDF.SupportedTargetFormats.DOCX
+      );
+
+    exportPDFOperation.setInput(inputAsset);
+
+    const result = await exportPDFOperation.execute(executionContext);
+
+    await result.saveAsFile(tempOutputPath);
+
+    const docxBuffer = await fs.readFile(tempOutputPath);
+
+    return docxBuffer;
+
+  } catch (error) {
+    console.error("Adobe conversion error:", error);
+    throw error;
+
+  } finally {
+    try {
+      await fs.unlink(tempInputPath);
+    } catch {}
+
+    try {
+      await fs.unlink(tempOutputPath);
+    } catch {}
+  }
+}
+
 async function renderPdfPages(pdfBuffer, imageFormat, scale = 2) {
   const pdf = await loadPdf(pdfBuffer);
   const mime = imageFormat === "jpg" ? "image/jpeg" : "image/png";
@@ -333,8 +385,14 @@ async function handleConversion(request, response) {
     }
 
     if (format === "word") {
+      const isProUser =
+        String(request.headers["x-user-plan"] || "free").toLowerCase() === "pro";
+
       const docxBuffer = await withTimeout(
-        convertToDocx(pdfBuffer),
+        isProUser
+          ? convertWithAdobe(pdfBuffer)
+          : convertToDocx(pdfBuffer),
+
         "La conversion tardo demasiado. Prueba con un PDF mas pequeno o con menos paginas."
       );
       response.writeHead(200, {
