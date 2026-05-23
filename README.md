@@ -37,6 +37,6 @@ npm start
 
 ## Limitaciones actuales
 
-- PDF a DOCX extrae texto seleccionable; PDFs escaneados requieren OCR futuro.
+- PDF a DOCX conserva el diseno insertando cada pagina como imagen dentro de Word.
 - El plan Pro esta en modo demostracion en el navegador.
 - Los limites gratis viven en la sesion del navegador; para produccion deben moverse al servidor.

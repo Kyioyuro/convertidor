@@ -3,7 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas");
-const { Document, Packer, Paragraph, PageBreak } = require("docx");
+const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
 
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -137,38 +137,44 @@ function textItemsToParagraphs(items) {
 }
 
 async function convertToDocx(pdfBuffer) {
-  const pdf = await loadPdf(pdfBuffer);
+  const pages = await renderPdfPages(pdfBuffer, "png", 1.7);
   const children = [];
 
-  if (pdf.numPages > MAX_PDF_PAGES) {
-    throw userError(`Este PDF tiene ${pdf.numPages} paginas. Por ahora el limite es ${MAX_PDF_PAGES} paginas por conversion.`);
-  }
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-    const paragraphs = textItemsToParagraphs(textContent.items);
-
-    if (pageNumber > 1) {
+  for (let pageIndex = 0; pageIndex < pages.length; pageIndex += 1) {
+    if (pageIndex > 0) {
       children.push(new Paragraph({ children: [new PageBreak()] }));
     }
 
-    children.push(new Paragraph({ text: `Pagina ${pageNumber}` }));
-
-    if (!paragraphs.length) {
-      children.push(new Paragraph({ text: "No se encontro texto seleccionable en esta pagina." }));
-    }
-
-    for (const text of paragraphs) {
-      children.push(new Paragraph({ text }));
-    }
+    children.push(new Paragraph({
+      children: [
+        new ImageRun({
+          data: pages[pageIndex].buffer,
+          type: "png",
+          transformation: pages[pageIndex].docxSize
+        })
+      ]
+    }));
   }
 
-  const document = new Document({ sections: [{ children }] });
+  const document = new Document({
+    sections: [{
+      properties: {
+        page: {
+          margin: {
+            top: 360,
+            right: 360,
+            bottom: 360,
+            left: 360
+          }
+        }
+      },
+      children
+    }]
+  });
   return Packer.toBuffer(document);
 }
 
-async function renderPdfPages(pdfBuffer, imageFormat) {
+async function renderPdfPages(pdfBuffer, imageFormat, scale = 2) {
   const pdf = await loadPdf(pdfBuffer);
   const mime = imageFormat === "jpg" ? "image/jpeg" : "image/png";
   const extension = imageFormat === "jpg" ? "jpg" : "png";
@@ -180,7 +186,7 @@ async function renderPdfPages(pdfBuffer, imageFormat) {
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 2 });
+    const viewport = page.getViewport({ scale });
     const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
     const canvasContext = canvas.getContext("2d");
 
@@ -197,6 +203,7 @@ async function renderPdfPages(pdfBuffer, imageFormat) {
 
     images.push({
       buffer,
+      docxSize: getDocxImageSize(viewport.width, viewport.height),
       extension,
       mime,
       name: `pagina-${String(pageNumber).padStart(2, "0")}.${extension}`
@@ -204,6 +211,17 @@ async function renderPdfPages(pdfBuffer, imageFormat) {
   }
 
   return images;
+}
+
+function getDocxImageSize(width, height) {
+  const maxWidth = 560;
+  const maxHeight = 720;
+  const ratio = Math.min(maxWidth / width, maxHeight / height);
+
+  return {
+    width: Math.round(width * ratio),
+    height: Math.round(height * ratio)
+  };
 }
 
 function makeCrcTable() {
