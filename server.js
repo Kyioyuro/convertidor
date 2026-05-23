@@ -1,8 +1,19 @@
 const http = require("node:http");
 const fs = require("node:fs/promises");
+const fsSync = require("node:fs");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
+const {
+  ServicePrincipalCredentials,
+  PDFServices,
+  MimeType,
+  ExportPDFParams,
+  ExportPDFTargetFormat,
+  ExportPDFJob,
+  SDKError,
+  ServiceUsageError,
+  ServiceApiError
+} = require("@adobe/pdfservices-node-sdk");
 const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas");
 const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
 
@@ -177,51 +188,73 @@ async function convertToDocx(pdfBuffer) {
 
 async function convertWithAdobe(pdfBuffer) {
   const tempInputPath = path.join(__dirname, `temp-${Date.now()}.pdf`);
-  const tempOutputPath = path.join(__dirname, `output-${Date.now()}.docx`);
-
+  
   try {
     await fs.writeFile(tempInputPath, pdfBuffer);
 
-    const credentials = PDFServicesSdk.Credentials
-      .servicePrincipalCredentialsBuilder()
-      .withClientId(process.env.PDF_SERVICES_CLIENT_ID)
-      .withClientSecret(process.env.PDF_SERVICES_CLIENT_SECRET)
-      .build();
+    const credentials = new ServicePrincipalCredentials({
+      clientId: process.env.PDF_SERVICES_CLIENT_ID,
+      clientSecret: process.env.PDF_SERVICES_CLIENT_SECRET
+    });
 
-    const executionContext =
-      PDFServicesSdk.ExecutionContext.create(credentials);
+    const pdfServices = new PDFServices({ credentials });
 
-    const inputAsset = PDFServicesSdk.FileRef.createFromLocalFile(
-      tempInputPath,
-      PDFServicesSdk.MediaType.PDF
-    );
+    const inputAsset = await pdfServices.upload({
+      readStream: fsSync.createReadStream(tempInputPath),
+      mimeType: MimeType.PDF
+    });
 
-    const exportPDFOperation =
-      PDFServicesSdk.ExportPDF.Operation.createNew(
-        PDFServicesSdk.ExportPDF.SupportedTargetFormats.DOCX
-      );
+    const params = new ExportPDFParams({
+      targetFormat: ExportPDFTargetFormat.DOCX
+    });
 
-    exportPDFOperation.setInput(inputAsset);
+    const job = new ExportPDFJob({
+      inputAsset,
+      params
+    });
 
-    const result = await exportPDFOperation.execute(executionContext);
+    const pollingURL = await pdfServices.submit({ job });
 
-    await result.saveAsFile(tempOutputPath);
+    const pdfServicesResponse = await pdfServices.getJobResult({
+      pollingURL,
+      resultType: ExportPDFJob
+    });
 
-    const docxBuffer = await fs.readFile(tempOutputPath);
+    const resultAsset = pdfServicesResponse.result.asset;
 
-    return docxBuffer;
+    const streamAsset = await pdfServices.getContent({
+      asset: resultAsset
+    });
+
+    const chunks = [];
+
+    await new Promise((resolve, reject) => {
+      streamAsset.readStream.on("data", chunk => chunks.push(chunk));
+      streamAsset.readStream.on("end", resolve);
+      streamAsset.readStream.on("error", reject);
+    });
+
+    return Buffer.concat(chunks);
 
   } catch (error) {
-    console.error("Adobe conversion error:", error);
+    if (
+      error instanceof SDKError ||
+      error instanceof ServiceUsageError ||
+      error instanceof ServiceApiError
+    ) {
+      console.error("Adobe API Error:", error);
+    } else {
+      console.error("General Error:", error);
+    }
+
     throw error;
 
   } finally {
-    try {
-      await fs.unlink(tempInputPath);
-    } catch {}
 
     try {
-      await fs.unlink(tempOutputPath);
+
+      await fs.unlink(tempInputPath);
+      
     } catch {}
   }
 }
