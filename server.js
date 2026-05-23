@@ -365,11 +365,12 @@ function serveSitemap(response) {
 
 async function serveStatic(request, response) {
   const url = new URL(request.url, `http://localhost:${PORT}`);
-  const safePath = path.normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, "");
-  const requestedPath = safePath === "\\" || safePath === "/" ? "index.html" : safePath;
-  const filePath = path.join(__dirname, requestedPath);
+  const requestedPath = url.pathname === "/"
+    ? "index.html"
+    : decodeURIComponent(url.pathname).replace(/^\/+/, "");
+  const filePath = path.resolve(__dirname, requestedPath);
 
-  if (!filePath.startsWith(__dirname)) {
+  if (!filePath.startsWith(path.resolve(__dirname))) {
     sendJson(response, 403, { error: "Ruta no permitida." });
     return;
   }
