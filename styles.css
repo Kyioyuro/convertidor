@@ -495,8 +495,37 @@ h1 {
   font-size: 0.92rem;
 }
 
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .site-footer p {
   margin: 0;
+}
+
+.legal-page {
+  width: min(52rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 5rem) 0;
+}
+
+.legal-page h1 {
+  max-width: 42rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(2.3rem, 5vw, 4rem);
+  line-height: 1;
+}
+
+.legal-page h2 {
+  margin: 2rem 0 0.7rem;
+  font-size: 1.35rem;
+}
+
+.legal-page p {
+  color: var(--muted);
+  line-height: 1.75;
 }
 
 @media (max-width: 920px) {

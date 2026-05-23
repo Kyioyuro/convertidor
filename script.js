@@ -7,7 +7,7 @@ const remainingCount = document.querySelector("#remaining-count");
 const proButton = document.querySelector("#pro-button");
 
 let selectedFile = null;
-let remainingFreeConversions = 3;
+let remainingFreeConversions = 2;
 let isPro = false;
 
 function setStatus(message, type = "neutral") {
@@ -28,6 +28,28 @@ function setSelectedFile(file) {
   selectedFile = file;
   fileLabel.textContent = file.name;
   setStatus("Archivo cargado. Elige el formato y presiona convertir.", "success");
+}
+
+function getDownloadName(contentDisposition, fallbackName, format) {
+  const match = /filename="([^"]+)"/.exec(contentDisposition || "");
+
+  if (match) {
+    return match[1];
+  }
+
+  const extension = format === "Word" ? "docx" : format.toLowerCase();
+  return `${fallbackName.replace(/\.pdf$/i, "")}.${extension}`;
+}
+
+function downloadBlob(blob, fileName) {
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(downloadUrl);
 }
 
 pdfInput.addEventListener("change", (event) => {
@@ -52,7 +74,7 @@ dropZone.addEventListener("drop", (event) => {
   setSelectedFile(event.dataTransfer.files[0]);
 });
 
-convertButton.addEventListener("click", () => {
+convertButton.addEventListener("click", async () => {
   if (!selectedFile) {
     setStatus("Primero sube un PDF para poder convertirlo.", "error");
     return;
@@ -67,18 +89,43 @@ convertButton.addEventListener("click", () => {
   const format = document.querySelector("input[name='format']:checked").value;
   convertButton.disabled = true;
   convertButton.textContent = "Convirtiendo...";
-  setStatus(`Preparando ${selectedFile.name} como ${format}.`, "neutral");
+  setStatus(`Convirtiendo ${selectedFile.name} a ${format}.`, "neutral");
 
-  window.setTimeout(() => {
+  try {
+    const response = await fetch("/api/convert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/pdf",
+        "X-File-Name": encodeURIComponent(selectedFile.name),
+        "X-Output-Format": format
+      },
+      body: selectedFile
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload.error || "No se pudo convertir el archivo.");
+    }
+
+    const blob = await response.blob();
+    const downloadName = getDownloadName(response.headers.get("Content-Disposition"), selectedFile.name, format);
+    downloadBlob(blob, downloadName);
+
     if (!isPro) {
       remainingFreeConversions -= 1;
       remainingCount.textContent = remainingFreeConversions;
     }
 
+    setStatus(`Conversion lista. Se descargo ${downloadName}.`, "success");
+  } catch (error) {
+    const serverHint = window.location.protocol === "file:"
+      ? " Abre la pagina desde http://localhost:3000 ejecutando npm start."
+      : "";
+    setStatus(`${error.message}${serverHint}`, "error");
+  } finally {
     convertButton.disabled = false;
     convertButton.textContent = "Convertir PDF";
-    setStatus(`Conversion simulada lista: ${selectedFile.name} a ${format}. Falta conectar el motor real.`, "success");
-  }, 1100);
+  }
 });
 
 proButton.addEventListener("click", () => {
