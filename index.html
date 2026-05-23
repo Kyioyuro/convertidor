@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Cambio | Convierte PDF a Word, JPG o PNG</title>
+  <meta name="description" content="Convierte archivos PDF a Word, JPG o PNG con una version gratis limitada o un plan ilimitado.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="PDF Cambio inicio">
+      <span class="brand-mark">PDF</span>
+      <span>PDF Cambio</span>
+    </a>
+    <nav class="nav" aria-label="Navegacion principal">
+      <a href="#convertidor">Convertidor</a>
+      <a href="#planes">Planes</a>
+      <a href="#anuncios">Anuncios</a>
+    </nav>
+    <a class="header-action" href="#planes">Actualizar</a>
+  </header>
+
+  <main>
+    <section class="hero" id="convertidor">
+      <div class="hero-copy">
+        <p class="eyebrow">Convertidor rapido de PDF</p>
+        <h1>Transforma tus PDFs en Word, JPG o PNG en pocos segundos.</h1>
+        <p class="hero-text">Una experiencia limpia para estudiantes, oficinas y negocios: sube tu PDF, elige el formato y descarga el resultado. Gratis con limite diario o ilimitado con el plan Pro.</p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#converter-card">Convertir ahora</a>
+          <a class="secondary-button" href="#planes">Ver planes</a>
+        </div>
+      </div>
+
+      <section class="converter-card" id="converter-card" aria-labelledby="converter-title">
+        <div class="plan-strip">
+          <span>Plan gratis</span>
+          <strong><span id="remaining-count">3</span> conversiones disponibles hoy</strong>
+        </div>
+
+        <div class="upload-area" id="drop-zone">
+          <input id="pdf-input" type="file" accept="application/pdf,.pdf">
+          <label for="pdf-input">
+            <span class="upload-icon">+</span>
+            <strong id="file-label">Sube o arrastra tu PDF</strong>
+            <small>Maximo recomendado: 25 MB en plan gratis</small>
+          </label>
+        </div>
+
+        <div class="format-panel">
+          <h2 id="converter-title">Elige el formato de salida</h2>
+          <div class="format-options" role="radiogroup" aria-label="Formato de salida">
+            <label class="format-option">
+              <input type="radio" name="format" value="Word" checked>
+              <span>DOCX</span>
+              <small>Editable en Word</small>
+            </label>
+            <label class="format-option">
+              <input type="radio" name="format" value="JPG">
+              <span>JPG</span>
+              <small>Imagen liviana</small>
+            </label>
+            <label class="format-option">
+              <input type="radio" name="format" value="PNG">
+              <span>PNG</span>
+              <small>Alta calidad</small>
+            </label>
+          </div>
+        </div>
+
+        <button class="convert-button" id="convert-button" type="button">Convertir PDF</button>
+        <p class="status-message" id="status-message" role="status">Listo para convertir tu primer archivo.</p>
+      </section>
+    </section>
+
+    <section class="trust-band" aria-label="Beneficios principales">
+      <article>
+        <span>01</span>
+        <h2>Gratis para empezar</h2>
+        <p>Incluye 3 conversiones diarias para que el publico pruebe la herramienta sin friccion.</p>
+      </article>
+      <article>
+        <span>02</span>
+        <h2>Pro ilimitado</h2>
+        <p>Ideal para usuarios frecuentes, oficinas y clientes que necesitan convertir todos los dias.</p>
+      </article>
+      <article>
+        <span>03</span>
+        <h2>Listo para crecer</h2>
+        <p>La estructura deja espacio para publicidad, analitica, SEO y pasarela de pago.</p>
+      </article>
+    </section>
+
+    <section class="plans-section" id="planes">
+      <div class="section-heading">
+        <p class="eyebrow">Version gratuita y version de paga</p>
+        <h2>Planes simples para convertir mas.</h2>
+      </div>
+
+      <div class="plans-grid">
+        <article class="price-card">
+          <div>
+            <h3>Gratis</h3>
+            <p class="price">$0 <span>MXN</span></p>
+            <p class="price-copy">Para conversiones ocasionales.</p>
+          </div>
+          <ul>
+            <li>3 conversiones por dia</li>
+            <li>PDF a Word, JPG o PNG</li>
+            <li>Archivos de hasta 25 MB</li>
+            <li>Publicidad visible</li>
+          </ul>
+          <a class="secondary-button full" href="#converter-card">Usar gratis</a>
+        </article>
+
+        <article class="price-card featured">
+          <div class="popular-label">Mas conveniente</div>
+          <div>
+            <h3>Pro ilimitado</h3>
+            <p class="price">$99 <span>MXN / mes</span></p>
+            <p class="price-copy">Para convertir sin limites.</p>
+          </div>
+          <ul>
+            <li>Conversiones ilimitadas</li>
+            <li>Prioridad en archivos grandes</li>
+            <li>Sin anuncios dentro del convertidor</li>
+            <li>Soporte para clientes frecuentes</li>
+          </ul>
+          <button class="primary-button full" id="pro-button" type="button">Activar Pro</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="ad-section" id="anuncios">
+      <div>
+        <p class="eyebrow">Monetizacion futura</p>
+        <h2>Espacios preparados para Google Ads.</h2>
+        <p>Cuando la pagina se publique y sea aprobada, aqui se podran colocar anuncios sin romper el diseno ni estorbar el flujo de conversion.</p>
+      </div>
+      <aside class="ad-preview" aria-label="Vista previa de anuncio">
+        <span>Anuncio</span>
+        <strong>728 x 90</strong>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>PDF Cambio. Conversiones rapidas con opcion gratis y plan ilimitado.</p>
+    <a href="#convertidor">Volver arriba</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
