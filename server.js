@@ -564,7 +564,7 @@ async function handleCreatePayment(request, response) {
     });
 
     sendJson(response, 200, {
-      init_point: result.init_point
+      init_point: result.body?.init_point || result.init_point
     });
 
   } catch (error) {
