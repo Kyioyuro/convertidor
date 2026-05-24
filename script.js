@@ -150,9 +150,24 @@ convertButton.addEventListener("click", async () => {
   }
 });
 
-proButton.addEventListener("click", () => {
-  isPro = true;
-  remainingCount.textContent = "Ilimitadas";
-  setStatus("Plan Pro activado en modo demostracion. Ahora no hay limite de conversiones.", "success");
-  document.querySelector("#converter-card").scrollIntoView({ behavior: "smooth" });
+proButton.addEventListener("click", async () => {
+  try {
+    setStatus("Conectando con MercadoPago...", "neutral");
+
+    const response = await fetch("/api/create-payment", {
+      method: "POST"
+    });
+
+    const data = await response.json();
+
+    if (!data.init_point) {
+      throw new Error("No se pudo iniciar el pago.");
+    }
+
+    window.location.href = data.init_point;
+
+  } catch (error) {
+    setStatus("Error al iniciar el pago.", "error");
+    console.error(error);
+  }
 });

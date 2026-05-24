@@ -17,8 +17,12 @@ const {
 } = require("@adobe/pdfservices-node-sdk");
 const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas");
 const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
+const mercadopago = require("mercadopago");
 
 const PORT = Number(process.env.PORT || 3000);
+mercadopago.configure({
+  access_token: process.env.MP_ACCESS_TOKEN
+});
 const HOST = process.env.HOST || "0.0.0.0";
 const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024;
@@ -532,6 +536,42 @@ async function serveStatic(request, response) {
   }
 }
 
+async function handleCreatePayment(request, response) {
+  try {
+    const preference = {
+      items: [
+        {
+          title: "Convertidor PDF Pro",
+          quantity: 1,
+          currency_id: "MXN",
+          unit_price: 49
+        }
+      ],
+
+      back_urls: {
+        success: `${SITE_URL}/?payment=success`,
+        failure: `${SITE_URL}/?payment=failure`,
+        pending: `${SITE_URL}/?payment=pending`
+      },
+
+      auto_return: "approved"
+    };
+
+    const result = await mercadopago.preferences.create(preference);
+
+    sendJson(response, 200, {
+      init_point: result.body.init_point
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    sendJson(response, 500, {
+      error: "No se pudo crear el pago."
+    });
+  }
+}
+
 const server = http.createServer((request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     sendJson(response, 200, { status: "ok" });
@@ -545,6 +585,11 @@ const server = http.createServer((request, response) => {
 
   if (request.method === "GET" && request.url === "/sitemap.xml") {
     serveSitemap(response);
+    return;
+  }
+
+  if (request.method === "POST" && request.url === "/api/create-payment") {
+    handleCreatePayment(request, response);
     return;
   }
 
