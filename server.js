@@ -564,20 +564,21 @@ async function handleCreatePayment(request, response) {
     });
 
     sendJson(response, 200, {
-        init_point:
-      result.sandbox_init_point ||
-      result.body?.sandbox_init_point ||
-      result.init_point ||
-      result.body?.init_point
+      init_point:
+        result.sandbox_init_point ||
+        result.body?.sandbox_init_point ||
+        result.init_point ||
+        result.body?.init_point
     });
 
-  }catch (error) {
+  } catch (error) {
     console.error("MERCADOPAGO ERROR:");
     console.error(error);
 
     sendJson(response, 500, {
       error: error.message || "No se pudo crear el pago."
-  });
+    });
+  }
 }
 
 const server = http.createServer((request, response) => {
