@@ -150,7 +150,9 @@ convertButton.addEventListener("click", async () => {
   }
 });
 
-proButton.addEventListener("click", async () => {
+proButton.addEventListener("click", async (event) => {
+  event.preventDefault();
+
   try {
     setStatus("Conectando con MercadoPago...", "neutral");
 
@@ -167,7 +169,7 @@ proButton.addEventListener("click", async () => {
     window.location.href = data.init_point;
 
   } catch (error) {
-    setStatus("Error al iniciar el pago.", "error");
     console.error(error);
+    setStatus("Error al iniciar el pago.", "error");
   }
 });
