@@ -150,8 +150,11 @@ convertButton.addEventListener("click", async () => {
   }
 });
 
-proButton.addEventListener("click", async (event) => {
+proButton.onclick = async (event) => {
   event.preventDefault();
+  event.stopPropagation();
+
+  alert("Botón funcionando");
 
   try {
     setStatus("Conectando con MercadoPago...", "neutral");
@@ -160,7 +163,11 @@ proButton.addEventListener("click", async (event) => {
       method: "POST"
     });
 
+    console.log("STATUS:", response.status);
+
     const data = await response.json();
+
+    console.log("DATA:", data);
 
     if (!data.init_point) {
       throw new Error("No se pudo iniciar el pago.");
@@ -170,6 +177,7 @@ proButton.addEventListener("click", async (event) => {
 
   } catch (error) {
     console.error(error);
+    alert(error.message);
     setStatus("Error al iniciar el pago.", "error");
   }
-});
+};
