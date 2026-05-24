@@ -17,11 +17,11 @@ const {
 } = require("@adobe/pdfservices-node-sdk");
 const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas");
 const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
-const mercadopago = require("mercadopago");
+const { MercadoPagoConfig, Preference } = require("mercadopago");
 
 const PORT = Number(process.env.PORT || 3000);
-mercadopago.configure({
-  access_token: process.env.MP_ACCESS_TOKEN
+const mpClient = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN
 });
 const HOST = process.env.HOST || "0.0.0.0";
 const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
@@ -557,10 +557,14 @@ async function handleCreatePayment(request, response) {
       auto_return: "approved"
     };
 
-    const result = await mercadopago.preferences.create(preference);
+    const preferenceClient = new Preference(mpClient);
+
+    const result = await preferenceClient.create({
+      body: preference
+    });
 
     sendJson(response, 200, {
-      init_point: result.body.init_point
+      init_point: result.init_point
     });
 
   } catch (error) {
