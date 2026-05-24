@@ -544,7 +544,7 @@ async function handleCreatePayment(request, response) {
           title: "Convertidor PDF Pro",
           quantity: 1,
           currency_id: "MXN",
-          unit_price: 49
+          unit_price: 39
         }
       ],
 
