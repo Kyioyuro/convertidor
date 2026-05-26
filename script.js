@@ -5,12 +5,24 @@ const convertButton = document.querySelector("#convert-button");
 const statusMessage = document.querySelector("#status-message");
 const remainingCount = document.querySelector("#remaining-count");
 const proButton = document.querySelector("#pro-button");
+const loginButton = document.querySelector("#login-button");
 const MAX_FREE_FILE_BYTES = 25 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 95000;
 
 let selectedFile = null;
 let remainingFreeConversions = 2;
 let isPro = false;
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("payment") === "success") {
+  isPro = true;
+  remainingCount.textContent = "Ilimitadas";
+
+  setStatus(
+    "Pago aprobado. Plan Pro activado correctamente.",
+    "success"
+  );
+}
 
 function setStatus(message, type = "neutral") {
   statusMessage.textContent = message;
@@ -153,8 +165,7 @@ convertButton.addEventListener("click", async () => {
 proButton.onclick = async (event) => {
   event.preventDefault();
   event.stopPropagation();
-
-  alert("Botón funcionando");
+  
 
   try {
     setStatus("Conectando con MercadoPago...", "neutral");
@@ -181,3 +192,56 @@ proButton.onclick = async (event) => {
     setStatus("Error al iniciar el pago.", "error");
   }
 };
+
+let currentUser = null;
+
+loginButton.addEventListener("click", async () => {
+  try {
+    const result = await window.signInWithPopup(
+      window.auth,
+      window.provider
+    );
+
+    currentUser = result.user;
+
+    const userRef = window.doc(window.db, "users", currentUser.uid);
+
+    const userSnap = await window.getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      await window.setDoc(userRef, {
+        email: currentUser.email,
+        premium: false,
+        createdAt: Date.now()
+      });
+    }
+
+    setStatus(
+      `Bienvenido ${currentUser.displayName}`,
+      "success"
+    );
+
+  } catch (error) {
+    console.error(error);
+    setStatus("Error al iniciar sesión.", "error");
+  }
+});
+
+window.onAuthStateChanged(window.auth, async (user) => {
+  if (!user) return;
+
+  currentUser = user;
+
+  const userRef = window.doc(window.db, "users", user.uid);
+
+  const userSnap = await window.getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+
+    if (userData.premium) {
+      isPro = true;
+      remainingCount.textContent = "Ilimitadas";
+    }
+  }
+});

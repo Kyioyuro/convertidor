@@ -31,6 +31,9 @@
   </header>
 
   <main>
+    <button id="login-button" class="secondary-button">
+      Iniciar sesión con Google
+    </button>
     <section class="hero" id="convertidor">
       <div class="hero-copy">
         <p class="eyebrow">Convertidor rapido de PDF</p>
@@ -162,6 +165,48 @@
       <a href="#convertidor">Volver arriba</a>
     </div>
   </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDcO9y5MYAdd7pT4ATAxcs2oKFB-QOwN5M",
+      authDomain: "convertidor-pdf-7fb42.firebaseapp.com",
+      projectId: "convertidor-pdf-7fb42",
+      storageBucket: "convertidor-pdf-7fb42.firebasestorage.app",
+      messagingSenderId: "322589400877",
+      appId: "1:322589400877:web:d7de820d6f8e8d85777da4",
+      measurementId: "G-QSJMFWN1JS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    window.auth = getAuth(app);
+    window.provider = new GoogleAuthProvider();
+    window.signInWithPopup = signInWithPopup;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOutFirebase = signOut;
+
+    window.db = getFirestore(app);
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+  </script>
 
   <script src="/script.js"></script>
 </body>
