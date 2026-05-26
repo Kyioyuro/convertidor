@@ -15,13 +15,47 @@ let isPro = false;
 const params = new URLSearchParams(window.location.search);
 
 if (params.get("payment") === "success") {
-  isPro = true;
-  remainingCount.textContent = "Ilimitadas";
 
-  setStatus(
-    "Pago aprobado. Plan Pro activado correctamente.",
-    "success"
-  );
+  window.onAuthStateChanged(window.auth, async (user) => {
+
+    if (!user) {
+      setStatus(
+        "Inicia sesión para activar tu suscripción Pro.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+
+      const userRef = window.doc(window.db, "users", user.uid);
+
+      await window.setDoc(userRef, {
+        email: user.email,
+        premium: true,
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      isPro = true;
+
+      remainingCount.textContent = "Ilimitadas";
+
+      setStatus(
+        "Pago aprobado. Plan Pro activado correctamente.",
+        "success"
+      );
+
+    } catch (error) {
+      console.error(error);
+
+      setStatus(
+        "No se pudo activar Pro.",
+        "error"
+      );
+    }
+
+  });
+
 }
 
 function setStatus(message, type = "neutral") {
