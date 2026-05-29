@@ -292,15 +292,14 @@ loginButton.addEventListener("click", async () => {
 
 window.addEventListener("firebase-ready", () => {
 
-  if (
-    !window.auth ||
-    !window.onAuthStateChanged
-  ) {
-
-    console.error("Firebase no cargó correctamente.");
-
+  if (!window.auth) {
+    console.error("Auth no disponible");
     return;
   }
+
+  activatePremiumAfterPayment();
+
+});
 
   window.onAuthStateChanged(window.auth, async (user) => {
 
@@ -332,9 +331,12 @@ window.addEventListener("firebase-ready", () => {
 
   });
 
-});
-
 async function activatePremiumAfterPayment() {
+
+  if (!window.auth) {
+  console.error("Firebase auth no listo");
+  return;
+}
 
   if (params.get("payment") !== "success") {
     return;
