@@ -16,56 +16,7 @@ let currentUser = null;
 const params = new URLSearchParams(window.location.search);
 
 
-async function activatePremiumAfterPayment() {
 
-  if (params.get("payment") !== "success") {
-    return;
-  }
-
-  if (!currentUser) {
-
-    setStatus(
-      "Inicia sesión nuevamente para activar Pro.",
-      "error"
-    );
-
-    return;
-  }
-
-  try {
-
-    const userRef = window.doc(
-      window.db,
-      "users",
-      currentUser.uid
-    );
-
-    await window.setDoc(userRef, {
-      email: currentUser.email,
-      premium: true,
-      updatedAt: Date.now()
-    }, { merge: true });
-
-    isPro = true;
-
-    remainingCount.textContent = "Ilimitadas";
-
-    setStatus(
-      "Plan Pro activado correctamente.",
-      "success"
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    setStatus(
-      "No se pudo activar Pro.",
-      "error"
-    );
-
-  }
-}
 
 function setStatus(message, type = "neutral") {
   statusMessage.textContent = message;
@@ -354,9 +305,11 @@ async function activatePremiumAfterPayment() {
   }
 
   setStatus(
-    "Activando plan Pro...",
-    "neutral"
+  "Plan Pro activado correctamente.",
+  "success"
   );
+
+  window.history.replaceState({}, "", "/");
 
   try {
 
@@ -419,6 +372,3 @@ async function activatePremiumAfterPayment() {
 
 }
 
-window.addEventListener("load", () => {
-  activatePremiumAfterPayment();
-});
