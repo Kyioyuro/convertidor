@@ -290,7 +290,7 @@ loginButton.addEventListener("click", async () => {
   }
 });
 
-window.addEventListener("load", () => {
+window.addEventListener("firebase-ready", () => {
 
   if (
     !window.auth ||

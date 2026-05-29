@@ -200,42 +200,55 @@
     measurementId: "G-QSJMFWN1JS"
   };
 
-  const app = initializeApp(firebaseConfig);
+  async function initFirebase() {
 
-  const auth = getAuth(app);
+    try {
 
-  try {
+      const app = initializeApp(firebaseConfig);
 
-    await setPersistence(
-      auth,
-      browserLocalPersistence
-    );
+      const auth = getAuth(app);
 
-    console.log("Firebase persistence OK");
+      await setPersistence(
+        auth,
+        browserLocalPersistence
+      );
 
-  } catch (error) {
+      window.auth = auth;
 
-    console.error("Persistence error:", error);
+      window.provider = new GoogleAuthProvider();
+
+      window.signInWithPopup = signInWithPopup;
+
+      window.onAuthStateChanged = onAuthStateChanged;
+
+      window.signOutFirebase = signOut;
+
+      window.db = getFirestore(app);
+
+      window.doc = doc;
+
+      window.getDoc = getDoc;
+
+      window.setDoc = setDoc;
+
+      console.log("Firebase listo");
+
+      window.dispatchEvent(
+        new Event("firebase-ready")
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Firebase init error:",
+        error
+      );
+
+    }
 
   }
 
-  window.auth = auth;
-
-  window.provider = new GoogleAuthProvider();
-
-  window.signInWithPopup = signInWithPopup;
-
-  window.onAuthStateChanged = onAuthStateChanged;
-
-  window.signOutFirebase = signOut;
-
-  window.db = getFirestore(app);
-
-  window.doc = doc;
-
-  window.getDoc = getDoc;
-
-  window.setDoc = setDoc;
+  initFirebase();
 
 </script>
 
