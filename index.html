@@ -167,57 +167,77 @@
   </footer>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-    import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  signOut,
-  setPersistence,
-  browserLocalPersistence
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    onAuthStateChanged,
+    signOut,
+    setPersistence,
+    browserLocalPersistence
+  }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDcO9y5MYAdd7pT4ATAxcs2oKFB-QOwN5M",
-      authDomain: "convertidor-pdf-7fb42.firebaseapp.com",
-      projectId: "convertidor-pdf-7fb42",
-      storageBucket: "convertidor-pdf-7fb42.firebasestorage.app",
-      messagingSenderId: "322589400877",
-      appId: "1:322589400877:web:d7de820d6f8e8d85777da4",
-      measurementId: "G-QSJMFWN1JS"
-    };
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc
+  }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
+  const firebaseConfig = {
+    apiKey: "AIzaSyDcO9y5MYAdd7pT4ATAxcs2oKFB-QOwN5M",
+    authDomain: "convertidor-pdf-7fb42.firebaseapp.com",
+    projectId: "convertidor-pdf-7fb42",
+    storageBucket: "convertidor-pdf-7fb42.firebasestorage.app",
+    messagingSenderId: "322589400877",
+    appId: "1:322589400877:web:d7de820d6f8e8d85777da4",
+    measurementId: "G-QSJMFWN1JS"
+  };
 
-    window.auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
 
-    setPersistence(
-      window.auth,
+  const auth = getAuth(app);
+
+  try {
+
+    await setPersistence(
+      auth,
       browserLocalPersistence
-    ).catch(console.error);
-      window.onAuthStateChanged(window.auth, (user) => {
-      console.log("AUTH USER:", user);
-    });
-    window.provider = new GoogleAuthProvider();
-    window.signInWithPopup = signInWithPopup;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.signOutFirebase = signOut;
+    );
 
-    window.db = getFirestore(app);
-    window.doc = doc;
-    window.getDoc = getDoc;
-    window.setDoc = setDoc;
-  </script>
+    console.log("Firebase persistence OK");
+
+  } catch (error) {
+
+    console.error("Persistence error:", error);
+
+  }
+
+  window.auth = auth;
+
+  window.provider = new GoogleAuthProvider();
+
+  window.signInWithPopup = signInWithPopup;
+
+  window.onAuthStateChanged = onAuthStateChanged;
+
+  window.signOutFirebase = signOut;
+
+  window.db = getFirestore(app);
+
+  window.doc = doc;
+
+  window.getDoc = getDoc;
+
+  window.setDoc = setDoc;
+
+</script>
 
   <script src="/script.js"></script>
 </body>
