@@ -255,6 +255,10 @@ proButton.onclick = async (event) => {
 let currentUser = null;
 
 loginButton.addEventListener("click", async () => {
+  if (!window.signInWithPopup) {
+  setStatus("Firebase todavía está cargando...", "error");
+  return;
+}
   try {
     const result = await window.signInWithPopup(
       window.auth,
@@ -286,23 +290,48 @@ loginButton.addEventListener("click", async () => {
   }
 });
 
-window.onAuthStateChanged(window.auth, async (user) => {
-  if (!user) return;
+window.addEventListener("load", () => {
 
-  currentUser = user;
+  if (
+    !window.auth ||
+    !window.onAuthStateChanged
+  ) {
 
-  const userRef = window.doc(window.db, "users", user.uid);
+    console.error("Firebase no cargó correctamente.");
 
-  const userSnap = await window.getDoc(userRef);
-
-  if (userSnap.exists()) {
-    const userData = userSnap.data();
-
-    if (userData.premium) {
-      isPro = true;
-      remainingCount.textContent = "Ilimitadas";
-    }
+    return;
   }
+
+  window.onAuthStateChanged(window.auth, async (user) => {
+
+    if (!user) return;
+
+    currentUser = user;
+
+    const userRef = window.doc(
+      window.db,
+      "users",
+      user.uid
+    );
+
+    const userSnap = await window.getDoc(userRef);
+
+    if (userSnap.exists()) {
+
+      const userData = userSnap.data();
+
+      if (userData.premium) {
+
+        isPro = true;
+
+        remainingCount.textContent = "Ilimitadas";
+
+      }
+
+    }
+
+  });
+
 });
 
 async function activatePremiumAfterPayment() {
@@ -377,4 +406,6 @@ async function activatePremiumAfterPayment() {
 
 }
 
-activatePremiumAfterPayment();
+window.addEventListener("load", () => {
+  activatePremiumAfterPayment();
+});
