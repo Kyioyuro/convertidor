@@ -425,6 +425,7 @@ async function handleConversion(request, response) {
     }
 
     if (format === "word") {
+      console.log("PLAN:", request.headers["x-user-plan"]);
       const isProUser =
         String(request.headers["x-user-plan"] || "free").toLowerCase() === "pro";
 

@@ -13,6 +13,7 @@ let selectedFile = null;
 let remainingFreeConversions = 2;
 let isPro = false;
 const params = new URLSearchParams(window.location.search);
+let currentUser = null;
 
 async function activatePremiumAfterPayment() {
 
@@ -20,41 +21,26 @@ async function activatePremiumAfterPayment() {
     return;
   }
 
-  setStatus(
-    "Verificando pago...",
-    "neutral"
-  );
+  if (!currentUser) {
 
-  const waitForUser = () => {
-    return new Promise((resolve) => {
+    setStatus(
+      "Inicia sesión nuevamente para activar Pro.",
+      "error"
+    );
 
-      const unsubscribe = window.onAuthStateChanged(
-        window.auth,
-        (user) => {
-
-          if (user) {
-            unsubscribe();
-            resolve(user);
-          }
-
-        }
-      );
-
-    });
-  };
+    return;
+  }
 
   try {
-
-    const user = await waitForUser();
 
     const userRef = window.doc(
       window.db,
       "users",
-      user.uid
+      currentUser.uid
     );
 
     await window.setDoc(userRef, {
-      email: user.email,
+      email: currentUser.email,
       premium: true,
       updatedAt: Date.now()
     }, { merge: true });
@@ -220,22 +206,35 @@ convertButton.addEventListener("click", async () => {
 
 proButton.onclick = async (event) => {
   event.preventDefault();
-  event.stopPropagation();
-
+  
   try {
 
-    setStatus("Conectando con Stripe...", "neutral");
+    if (!currentUser) {
+      setStatus(
+        "Primero inicia sesión con Google.",
+        "error"
+      );
+      return;
+    }
 
-    const response = await fetch("/api/create-stripe-checkout", {
-      method: "POST"
-    });
-    
+    setStatus(
+      "Conectando con Stripe...",
+      "neutral"
+    );
+
+    const response = await fetch(
+      "/api/create-stripe-checkout",
+      {
+        method: "POST"
+      }
+    );
+
     const data = await response.json();
 
-    console.log(data);
-
     if (!data.url) {
-      throw new Error("No se pudo iniciar Stripe Checkout.");
+      throw new Error(
+        "No se pudo iniciar Stripe Checkout."
+      );
     }
 
     window.location.href = data.url;
@@ -301,9 +300,16 @@ window.addEventListener("firebase-ready", () => {
 
 });
 
-  window.onAuthStateChanged(window.auth, async (user) => {
+window.onAuthStateChanged(
+  window.auth,
+  async (user) => {
 
-    if (!user) return;
+    if (!user) {
+
+      currentUser = null;
+
+      return;
+    }
 
     currentUser = user;
 
@@ -323,13 +329,17 @@ window.addEventListener("firebase-ready", () => {
 
         isPro = true;
 
-        remainingCount.textContent = "Ilimitadas";
+        remainingCount.textContent =
+          "Ilimitadas";
 
       }
 
     }
 
-  });
+    await activatePremiumAfterPayment();
+
+  }
+);
 
 async function activatePremiumAfterPayment() {
 
