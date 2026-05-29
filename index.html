@@ -200,10 +200,14 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     const app = initializeApp(firebaseConfig);
 
     window.auth = getAuth(app);
-    await setPersistence(
+
+    setPersistence(
       window.auth,
       browserLocalPersistence
-    );
+    ).catch(console.error);
+      window.onAuthStateChanged(window.auth, (user) => {
+      console.log("AUTH USER:", user);
+    });
     window.provider = new GoogleAuthProvider();
     window.signInWithPopup = signInWithPopup;
     window.onAuthStateChanged = onAuthStateChanged;
