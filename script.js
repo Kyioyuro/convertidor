@@ -12,8 +12,9 @@ const REQUEST_TIMEOUT_MS = 95000;
 let selectedFile = null;
 let remainingFreeConversions = 2;
 let isPro = false;
-const params = new URLSearchParams(window.location.search);
 let currentUser = null;
+const params = new URLSearchParams(window.location.search);
+
 
 async function activatePremiumAfterPayment() {
 
@@ -251,7 +252,7 @@ proButton.onclick = async (event) => {
   }
 };
 
-let currentUser = null;
+
 
 loginButton.addEventListener("click", async () => {
   if (!window.signInWithPopup) {
