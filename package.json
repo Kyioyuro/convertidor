@@ -12,6 +12,7 @@
     "@napi-rs/canvas": "^1.0.0",
     "docx": "^9.6.1",
     "mercadopago": "^3.0.0",
-    "pdfjs-dist": "^5.7.284"
+    "pdfjs-dist": "^5.7.284",
+    "stripe": "^22.2.0"
   }
 }
