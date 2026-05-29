@@ -305,4 +305,76 @@ window.onAuthStateChanged(window.auth, async (user) => {
   }
 });
 
+async function activatePremiumAfterPayment() {
+
+  if (params.get("payment") !== "success") {
+    return;
+  }
+
+  setStatus(
+    "Activando plan Pro...",
+    "neutral"
+  );
+
+  try {
+
+    let user = window.auth.currentUser;
+
+    if (!user) {
+
+      await new Promise((resolve) => {
+        const unsubscribe = window.onAuthStateChanged(
+          window.auth,
+          (firebaseUser) => {
+
+            if (firebaseUser) {
+              unsubscribe();
+              resolve();
+            }
+
+          }
+        );
+      });
+
+      user = window.auth.currentUser;
+    }
+
+    if (!user) {
+      throw new Error("No hay sesión activa.");
+    }
+
+    const userRef = window.doc(
+      window.db,
+      "users",
+      user.uid
+    );
+
+    await window.setDoc(userRef, {
+      email: user.email,
+      premium: true,
+      updatedAt: Date.now()
+    }, { merge: true });
+
+    isPro = true;
+
+    remainingCount.textContent = "Ilimitadas";
+
+    setStatus(
+      "Plan Pro activado correctamente.",
+      "success"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    setStatus(
+      error.message || "No se pudo activar Pro.",
+      "error"
+    );
+
+  }
+
+}
+
 activatePremiumAfterPayment();
