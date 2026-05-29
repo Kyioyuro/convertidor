@@ -18,11 +18,13 @@ const {
 const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas");
 const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
 const { MercadoPagoConfig, Preference } = require("mercadopago");
+const Stripe = require("stripe");
 
 const PORT = Number(process.env.PORT || 3000);
 const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN
 });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const HOST = process.env.HOST || "0.0.0.0";
 const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024;
@@ -581,6 +583,48 @@ async function handleCreatePayment(request, response) {
   }
 }
 
+async function handleCreateStripeCheckout(request, response) {
+  try {
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+
+      line_items: [
+        {
+          price_data: {
+            currency: "mxn",
+            product_data: {
+              name: "Convertidor PDF Pro"
+            },
+            unit_amount: 4900
+          },
+          quantity: 1
+        }
+      ],
+
+      mode: "payment",
+
+      success_url: `${SITE_URL}/?payment=success`,
+      cancel_url: `${SITE_URL}/?payment=cancel`,
+
+    });
+
+    sendJson(response, 200, {
+      url: session.url
+    });
+
+  } catch (error) {
+
+    console.error("STRIPE ERROR:");
+    console.error(error);
+
+    sendJson(response, 500, {
+      error: "No se pudo crear Stripe Checkout."
+    });
+
+  }
+}
+
 const server = http.createServer((request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     sendJson(response, 200, { status: "ok" });
@@ -601,6 +645,11 @@ const server = http.createServer((request, response) => {
     handleCreatePayment(request, response);
     return;
   }
+
+  if (request.method === "POST" && request.url === "/api/create-stripe-checkout") {
+  handleCreateStripeCheckout(request, response);
+  return;
+}
 
   if (request.method === "POST" && request.url === "/api/convert") {
     handleConversion(request, response);

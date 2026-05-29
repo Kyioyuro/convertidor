@@ -199,31 +199,34 @@ convertButton.addEventListener("click", async () => {
 proButton.onclick = async (event) => {
   event.preventDefault();
   event.stopPropagation();
-  
 
   try {
-    setStatus("Conectando con MercadoPago...", "neutral");
 
-    const response = await fetch("/api/create-payment", {
+    setStatus("Conectando con Stripe...", "neutral");
+
+    const response = await fetch("/api/create-stripe-checkout", {
       method: "POST"
     });
-
-    console.log("STATUS:", response.status);
-
+    
     const data = await response.json();
 
-    console.log("DATA:", data);
+    console.log(data);
 
-    if (!data.init_point) {
-      throw new Error("No se pudo iniciar el pago.");
+    if (!data.url) {
+      throw new Error("No se pudo iniciar Stripe Checkout.");
     }
 
-    window.location.href = data.init_point;
+    window.location.href = data.url;
 
   } catch (error) {
+
     console.error(error);
-    alert(error.message);
-    setStatus("Error al iniciar el pago.", "error");
+
+    setStatus(
+      "Error al iniciar el pago.",
+      "error"
+    );
+
   }
 };
 
