@@ -14,7 +14,7 @@ let selectedFile = null;
 let remainingFreeConversions = 2;
 let isPro = false;
 let currentUser = null;
-const params = new URLSearchParams(window.location.search);
+
 
 
 
@@ -259,10 +259,9 @@ window.addEventListener("firebase-ready", () => {
 
   if (!window.auth) {
     console.error("Auth no disponible");
-    return;
+
   }
 
-  activatePremiumAfterPayment();
 
 });
 
@@ -316,87 +315,8 @@ window.onAuthStateChanged(
 
     }
 
-    await activatePremiumAfterPayment();
-
   }
 );
 
-async function activatePremiumAfterPayment() {
 
-  if (!window.auth) {
-  console.error("Firebase auth no listo");
-  return;
-}
-
-  if (params.get("payment") !== "success") {
-    return;
-  }
-
-  setStatus(
-  "Plan Pro activado correctamente.",
-  "success"
-  );
-
-  window.history.replaceState({}, "", "/");
-
-  try {
-
-    let user = window.auth.currentUser;
-
-    if (!user) {
-
-      await new Promise((resolve) => {
-        const unsubscribe = window.onAuthStateChanged(
-          window.auth,
-          (firebaseUser) => {
-
-            if (firebaseUser) {
-              unsubscribe();
-              resolve();
-            }
-
-          }
-        );
-      });
-
-      user = window.auth.currentUser;
-    }
-
-    if (!user) {
-      throw new Error("No hay sesión activa.");
-    }
-
-    const userRef = window.doc(
-      window.db,
-      "users",
-      user.uid
-    );
-
-    await window.setDoc(userRef, {
-      email: user.email,
-      premium: true,
-      updatedAt: Date.now()
-    }, { merge: true });
-
-    isPro = true;
-
-    remainingCount.textContent = "Ilimitadas";
-
-    setStatus(
-      "Plan Pro activado correctamente.",
-      "success"
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    setStatus(
-      error.message || "No se pudo activar Pro.",
-      "error"
-    );
-
-  }
-
-}
 
