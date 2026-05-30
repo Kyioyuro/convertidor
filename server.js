@@ -21,10 +21,7 @@ const { MercadoPagoConfig, Preference } = require("mercadopago");
 const Stripe = require("stripe");
 const admin = require("firebase-admin");
 
-const PORT = Number(process.env.PORT || 3000);
-const mpClient = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN
-});
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -33,6 +30,15 @@ admin.initializeApp({
     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
   })
 });
+
+const db = admin.firestore();
+
+const PORT = Number(process.env.PORT || 3000);
+const mpClient = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN
+});
+
+
 const HOST = process.env.HOST || "0.0.0.0";
 const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024;
@@ -440,6 +446,25 @@ async function handleConversion(request, response) {
     const user =
     await verifyFirebaseUser(request);
 
+    const userDoc =
+      await db
+        .collection("users")
+        .doc(user.uid)
+        .get();
+
+    const userData =
+      userDoc.exists
+        ? userDoc.data()
+        : {};
+
+    const isProUser =
+      userData.premium === true;
+
+    console.log(
+      "PLAN REAL:",
+      isProUser ? "PRO" : "FREE"
+    );
+
     console.log(
     "Usuario:",
     user.uid
@@ -463,7 +488,6 @@ async function handleConversion(request, response) {
 
     if (format === "word") {
       console.log("PLAN:", request.headers["x-user-plan"]);
-      const isProUser = false;
       const docxBuffer = await withTimeout(
         isProUser
           ? convertWithAdobe(pdfBuffer)
