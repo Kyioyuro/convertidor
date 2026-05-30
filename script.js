@@ -6,6 +6,7 @@ const statusMessage = document.querySelector("#status-message");
 const remainingCount = document.querySelector("#remaining-count");
 const proButton = document.querySelector("#pro-button");
 const loginButton = document.querySelector("#login-button");
+const planName = document.querySelector("#plan-name");
 const MAX_FREE_FILE_BYTES = 25 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 95000;
 
@@ -256,6 +257,8 @@ window.onAuthStateChanged(
   window.auth,
   async (user) => {
 
+    console.log("AUTH USER:", user);
+
     if (!user) {
 
       currentUser = null;
@@ -275,14 +278,24 @@ window.onAuthStateChanged(
 
     if (userSnap.exists()) {
 
-      const userData = userSnap.data();
+      console.log("DATA:", userSnap.data());
 
       if (userData.premium) {
+
+        console.log("USUARIO PRO DETECTADO");
 
         isPro = true;
 
         remainingCount.textContent =
           "Ilimitadas";
+
+        document.querySelector(".plan-badge").textContent =
+          "Plan Pro";
+
+        proButton.textContent =
+          "Plan Activo";
+
+        proButton.disabled = true;
 
       }
 
