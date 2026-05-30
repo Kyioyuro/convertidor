@@ -690,6 +690,72 @@ async function handleCreateStripeCheckout(request, response) {
   }
 }
 
+async function handleStripeWebhook(request, response) {
+
+  try {
+
+    const chunks = [];
+
+    for await (const chunk of request) {
+      chunks.push(chunk);
+    }
+
+    const rawBody = Buffer.concat(chunks);
+
+    const signature =
+      request.headers["stripe-signature"];
+
+    const event = stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+
+    if (event.type === "checkout.session.completed") {
+
+      const session = event.data.object;
+
+      const uid = session.metadata?.uid;
+
+      if (uid) {
+
+        await db
+          .collection("users")
+          .doc(uid)
+          .set(
+            {
+              premium: true,
+              updatedAt: Date.now()
+            },
+            { merge: true }
+          );
+
+        console.log(
+          "USUARIO ACTIVADO:",
+          uid
+        );
+
+      }
+
+    }
+
+    response.writeHead(200);
+    response.end("ok");
+
+  } catch (error) {
+
+    console.error(
+      "WEBHOOK ERROR:",
+      error
+    );
+
+    response.writeHead(400);
+    response.end("error");
+
+  }
+
+}
+
 const server = http.createServer((request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     sendJson(response, 200, { status: "ok" });
@@ -713,6 +779,17 @@ const server = http.createServer((request, response) => {
 
   if (request.method === "POST" && request.url === "/api/create-stripe-checkout") {
   handleCreateStripeCheckout(request, response);
+  return;
+}
+
+  if (
+  request.method === "POST" &&
+  request.url === "/api/stripe-webhook"
+) {
+  handleStripeWebhook(
+    request,
+    response
+  );
   return;
 }
 
