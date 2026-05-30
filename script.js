@@ -177,6 +177,9 @@ proButton.onclick = async (event) => {
       return;
     }
 
+    const token =
+      await currentUser.getIdToken();
+
     setStatus(
       "Conectando con Stripe...",
       "neutral"
@@ -185,7 +188,10 @@ proButton.onclick = async (event) => {
     const response = await fetch(
       "/api/create-stripe-checkout",
       {
-        method: "POST"
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
     );
 

@@ -487,7 +487,7 @@ async function handleConversion(request, response) {
     }
 
     if (format === "word") {
-      console.log("PLAN:", request.headers["x-user-plan"]);
+      
       const docxBuffer = await withTimeout(
         isProUser
           ? convertWithAdobe(pdfBuffer)
@@ -646,7 +646,12 @@ async function handleCreatePayment(request, response) {
 async function handleCreateStripeCheckout(request, response) {
   try {
 
+    const user =
+    await verifyFirebaseUser(request);
     const session = await stripe.checkout.sessions.create({
+      metadata: {
+        uid: user.uid
+      },
       payment_method_types: ["card"],
 
       line_items: [
