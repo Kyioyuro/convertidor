@@ -19,12 +19,20 @@ const { createCanvas, DOMMatrix, ImageData, Path2D } = require("@napi-rs/canvas"
 const { Document, ImageRun, Packer, Paragraph, PageBreak } = require("docx");
 const { MercadoPagoConfig, Preference } = require("mercadopago");
 const Stripe = require("stripe");
+const admin = require("firebase-admin");
 
 const PORT = Number(process.env.PORT || 3000);
 const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN
 });
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+  })
+});
 const HOST = process.env.HOST || "0.0.0.0";
 const SITE_URL = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024;
@@ -67,6 +75,28 @@ function userError(message, statusCode = 400) {
   error.statusCode = statusCode;
   error.expose = true;
   return error;
+}
+
+async function verifyFirebaseUser(request) {
+
+  const authHeader =
+    request.headers.authorization;
+
+  if (!authHeader) {
+    throw userError(
+      "Debes iniciar sesión.",
+      401
+    );
+  }
+
+  const token =
+    authHeader.replace("Bearer ", "");
+
+  const decodedToken =
+    await admin.auth().verifyIdToken(token);
+
+  return decodedToken;
+
 }
 
 function withTimeout(promise, message) {
@@ -407,6 +437,13 @@ function createZip(files) {
 
 async function handleConversion(request, response) {
   try {
+    const user =
+    await verifyFirebaseUser(request);
+
+    console.log(
+    "Usuario:",
+    user.uid
+  );
     const format = String(request.headers["x-output-format"] || "").toLowerCase();
     const contentType = String(request.headers["content-type"] || "").toLowerCase();
     const originalName = decodeURIComponent(String(request.headers["x-file-name"] || "convertido.pdf"));
@@ -426,9 +463,7 @@ async function handleConversion(request, response) {
 
     if (format === "word") {
       console.log("PLAN:", request.headers["x-user-plan"]);
-      const isProUser =
-        String(request.headers["x-user-plan"] || "free").toLowerCase() === "pro";
-
+      const isProUser = false;
       const docxBuffer = await withTimeout(
         isProUser
           ? convertWithAdobe(pdfBuffer)

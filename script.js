@@ -115,13 +115,20 @@ convertButton.addEventListener("click", async () => {
   setStatus(`Convirtiendo ${selectedFile.name} a ${format}. Puede tardar hasta 1 minuto.`, "neutral");
 
   try {
+    if (!currentUser) {
+      throw new Error(
+        "Debes iniciar sesión para convertir."
+      );
+    }
+    const token =
+    await currentUser.getIdToken();
     const response = await fetch("/api/convert", {
       method: "POST",
       headers: {
         "Content-Type": "application/pdf",
         "X-File-Name": encodeURIComponent(selectedFile.name),
         "X-Output-Format": format,
-        "X-User-Plan": isPro ? "pro" : "free"
+        "Authorization": `Bearer ${token}`
       },
       body: selectedFile,
       signal: controller.signal
@@ -278,13 +285,15 @@ window.onAuthStateChanged(
 
     if (userSnap.exists()) {
 
-      console.log("DATA:", userSnap.data());
+    const userData = userSnap.data();
 
-      if (userData.premium) {
+    console.log("DATA:", userData);
 
-        console.log("USUARIO PRO DETECTADO");
+    if (userData.premium) {
 
-        isPro = true;
+    console.log("USUARIO PRO DETECTADO");
+
+    isPro = true;
 
         remainingCount.textContent =
           "Ilimitadas";
