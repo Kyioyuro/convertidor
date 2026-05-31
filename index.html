@@ -170,89 +170,59 @@
   </footer>
 
   <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    onAuthStateChanged,
-    signOut,
-    setPersistence,
-    browserLocalPersistence
+const firebaseConfig = {
+  apiKey: "AIzaSyDcO9y5MYAdd7pT4ATAxcs2oKFB-QOwN5M",
+  authDomain: "convertidor-pdf-7fb42.firebaseapp.com",
+  projectId: "convertidor-pdf-7fb42",
+  storageBucket: "convertidor-pdf-7fb42.firebasestorage.app",
+  messagingSenderId: "322589400877",
+  appId: "1:322589400877:web:d7de820d6f8e8d85777da4",
+  measurementId: "G-QSJMFWN1JS"
+};
+
+async function initFirebase() {
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    await setPersistence(auth, browserLocalPersistence);
+
+    window.auth = auth;
+    window.provider = new GoogleAuthProvider();
+
+    // 👇 SOLO lo necesario
+    window.signInWithPopup = signInWithPopup;
+
+    window.db = getFirestore(app);
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+
+    console.log("Firebase listo");
+    window.dispatchEvent(new Event("firebase-ready"));
+
+  } catch (error) {
+    console.error("Firebase init error:", error);
   }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+}
 
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc
-  }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDcO9y5MYAdd7pT4ATAxcs2oKFB-QOwN5M",
-    authDomain: "convertidor-pdf-7fb42.firebaseapp.com",
-    projectId: "convertidor-pdf-7fb42",
-    storageBucket: "convertidor-pdf-7fb42.firebasestorage.app",
-    messagingSenderId: "322589400877",
-    appId: "1:322589400877:web:d7de820d6f8e8d85777da4",
-    measurementId: "G-QSJMFWN1JS"
-  };
-
-  async function initFirebase() {
-
-    try {
-
-      const app = initializeApp(firebaseConfig);
-
-      const auth = getAuth(app);
-
-      await setPersistence(
-        auth,
-        browserLocalPersistence
-      );
-
-      window.auth = auth;
-
-      window.provider = new GoogleAuthProvider();
-
-      window.signInWithPopup = signInWithPopup;
-
-      window.onAuthStateChanged = onAuthStateChanged;
-
-      window.signOutFirebase = signOut;
-
-      window.db = getFirestore(app);
-
-      window.doc = doc;
-
-      window.getDoc = getDoc;
-
-      window.setDoc = setDoc;
-
-      console.log("Firebase listo");
-
-      window.dispatchEvent(
-        new Event("firebase-ready")
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Firebase init error:",
-        error
-      );
-
-    }
-
-  }
-
-  initFirebase();
-
+initFirebase();
 </script>
 
   <script src="/script.js"></script>

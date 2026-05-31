@@ -220,10 +220,11 @@ proButton.onclick = async (event) => {
 
 
 loginButton.addEventListener("click", async () => {
-  if (!window.signInWithPopup) {
-  setStatus("Firebase todavía está cargando...", "error");
-  return;
-}
+  if (!window.auth) {
+    setStatus("Firebase no está listo aún", "error");
+    return;
+  }
+
   try {
     const result = await window.signInWithPopup(
       window.auth,
@@ -233,7 +234,7 @@ loginButton.addEventListener("click", async () => {
     currentUser = result.user;
 
     const userRef = window.doc(window.db, "users", currentUser.uid);
-
+    
     const userSnap = await window.getDoc(userRef);
 
     if (!userSnap.exists()) {
@@ -244,10 +245,7 @@ loginButton.addEventListener("click", async () => {
       });
     }
 
-    setStatus(
-      `Bienvenido ${currentUser.displayName}`,
-      "success"
-    );
+    setStatus(`Bienvenido ${currentUser.displayName}`, "success");
 
   } catch (error) {
     console.error(error);
@@ -265,10 +263,12 @@ window.addEventListener("firebase-ready", () => {
 
 });
 
-window.onAuthStateChanged(
-  window.auth,
-  async (user) => {
+window.addEventListener("firebase-ready", async () => {
+  const { onAuthStateChanged } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+  );
 
+  onAuthStateChanged(window.auth, async (user) => {
     console.log("AUTH USER:", user);
 
     if (!user) {
@@ -280,44 +280,21 @@ window.onAuthStateChanged(
 
     currentUser = user;
 
-    const userRef = window.doc(
-      window.db,
-      "users",
-      user.uid
-    );
-
+    const userRef = window.doc(window.db, "users", user.uid);
     const userSnap = await window.getDoc(userRef);
 
     if (userSnap.exists()) {
+      const userData = userSnap.data();
 
-    const userData = userSnap.data();
-
-    console.log("DATA:", userData);
-
-    if (userData.premium) {
-
-      console.log("USUARIO PRO DETECTADO");
-
-      isPro = true;
-
-      remainingCount.textContent =
-        "Ilimitadas";
-
-      planName.textContent =
-        "Plan Pro";
-
-      proButton.textContent =
-        "Plan Activo";
-
-      proButton.disabled = true;
-
+      if (userData.premium) {
+        isPro = true;
+        remainingCount.textContent = "Ilimitadas";
+        planName.textContent = "Plan Pro";
+        proButton.textContent = "Plan Activo";
+        proButton.disabled = true;
+      }
     }
-
-    
-
-  }
-  }
-);
-
+  });
+});
 
 
