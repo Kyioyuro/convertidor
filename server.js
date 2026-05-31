@@ -554,21 +554,37 @@ function serveSitemap(response) {
   const today = new Date().toISOString().slice(0, 10);
   sendText(response, 200, "application/xml; charset=utf-8", `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
   <url>
     <loc>${SITE_URL}/</loc>
     <lastmod>${today}</lastmod>
     <priority>1.0</priority>
   </url>
+
   <url>
     <loc>${SITE_URL}/privacidad.html</loc>
     <lastmod>${today}</lastmod>
     <priority>0.6</priority>
   </url>
+
   <url>
     <loc>${SITE_URL}/terminos.html</loc>
     <lastmod>${today}</lastmod>
     <priority>0.6</priority>
   </url>
+
+  <url>
+    <loc>${SITE_URL}/acerca.html</loc>
+    <lastmod>${today}</lastmod>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>${SITE_URL}/contacto.html</loc>
+    <lastmod>${today}</lastmod>
+    <priority>0.5</priority>
+  </url>
+
 </urlset>
 `);
 }
