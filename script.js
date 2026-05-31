@@ -296,22 +296,22 @@ window.onAuthStateChanged(
 
     if (userData.premium) {
 
-    console.log("USUARIO PRO DETECTADO");
+  console.log("USUARIO PRO DETECTADO");
 
-    isPro = true;
+  isPro = true;
 
-        remainingCount.textContent =
-          "Ilimitadas";
+  remainingCount.textContent =
+    "Ilimitadas";
 
-        document.querySelector(".plan-badge").textContent =
-          "Plan Pro";
+  planName.textContent =
+    "Plan Pro";
 
-        proButton.textContent =
-          "Plan Activo";
+  proButton.textContent =
+    "Plan Activo";
 
-        proButton.disabled = true;
+  proButton.disabled = true;
 
-      }
+}
 
     }
 
