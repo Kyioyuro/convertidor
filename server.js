@@ -806,6 +806,6 @@ const server = http.createServer((request, response) => {
   sendJson(response, 405, { error: "Metodo no permitido." });
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`PDF Cambio listo en http://${HOST}:${PORT}`);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`PDF Cambio listo en puerto ${PORT}`);
 });
