@@ -772,6 +772,15 @@ async function handleStripeWebhook(request, response) {
 
 }
 
+function serveAdsTxt(response) {
+  sendText(
+    response,
+    200,
+    "text/plain; charset=utf-8",
+    "google.com, pub-9692125280262615, DIRECT, f08c47fec0942fa0"
+  );
+}
+
 const server = http.createServer((request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     sendJson(response, 200, { status: "ok" });
@@ -819,6 +828,11 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (request.method === "GET" && request.url === "/ads.txt") {
+  serveAdsTxt(response);
+  return;
+}
+
   sendJson(response, 405, { error: "Metodo no permitido." });
 });
 
@@ -826,7 +840,4 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`PDF Cambio listo en puerto ${PORT}`);
 });
 
-app.get('/ads.txt', (req, res) => {
-  res.type('text/plain');
-  res.send('google.com, pub-9692125280262615, DIRECT, f08c47fec0942fa0');
-});
+
