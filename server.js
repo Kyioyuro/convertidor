@@ -825,3 +825,8 @@ const server = http.createServer((request, response) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`PDF Cambio listo en puerto ${PORT}`);
 });
+
+app.get('/ads.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('google.com, pub-9692125280262615, DIRECT, f08c47fec0942fa0');
+});
