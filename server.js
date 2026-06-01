@@ -797,6 +797,11 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (request.method === "GET" && request.url === "/ads.txt") {
+  serveAdsTxt(response);
+  return;
+}
+
   if (request.method === "POST" && request.url === "/api/create-payment") {
     handleCreatePayment(request, response);
     return;
@@ -828,11 +833,8 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  if (request.method === "GET" && request.url === "/ads.txt") {
-  serveAdsTxt(response);
-  return;
-}
 
+  
   sendJson(response, 405, { error: "Metodo no permitido." });
 });
 
