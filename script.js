@@ -9,6 +9,14 @@ const loginButton = document.querySelector("#login-button");
 const planName = document.querySelector("#plan-name");
 const MAX_FREE_FILE_BYTES = 25 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 95000;
+const userProfile = document.querySelector("#user-profile");
+const userAvatar = document.querySelector("#user-avatar");
+const userAvatarLarge = document.querySelector("#user-avatar-large");
+const userName = document.querySelector("#user-name");
+const userEmail = document.querySelector("#user-email");
+const userMenu = document.querySelector("#user-menu");
+const logoutButton = document.querySelector("#logout-button");
+const userPlanText = document.querySelector("#user-plan-text");
 
 let selectedFile = null;
 let remainingFreeConversions = 2;
@@ -275,10 +283,29 @@ window.addEventListener("firebase-ready", async () => {
 
       currentUser = null;
 
+      loginButton.classList.remove("hidden");
+
+      userProfile.classList.add("hidden");
+
       return;
     }
 
     currentUser = user;
+    loginButton.classList.add("hidden");
+
+    userProfile.classList.remove("hidden");
+
+    userAvatar.src =
+    user.photoURL;
+
+    userAvatarLarge.src =
+    user.photoURL;
+
+    userName.textContent =
+    user.displayName || "Usuario";
+
+    userEmail.textContent =
+    user.email || "";
 
     const userRef = window.doc(window.db, "users", user.uid);
     const userSnap = await window.getDoc(userRef);
@@ -287,14 +314,69 @@ window.addEventListener("firebase-ready", async () => {
       const userData = userSnap.data();
 
       if (userData.premium) {
+        userPlanText.textContent = "Plan Pro";
         isPro = true;
         remainingCount.textContent = "Ilimitadas";
         planName.textContent = "Plan Pro";
         proButton.textContent = "Plan Activo";
         proButton.disabled = true;
+      }else{
+        userPlanText.textContent = "Plan Gratis";
       }
     }
   });
 });
+
+userAvatar?.addEventListener(
+  "click",
+  () => {
+
+    userMenu.classList.toggle(
+      "active"
+    );
+
+  }
+);
+
+document.addEventListener(
+  "click",
+  (event)=>{
+
+    if (
+      userProfile &&
+      !userProfile.contains(event.target)
+    ) 
+    {
+      userMenu.classList.remove("active");
+    }
+
+  }
+);
+
+logoutButton?.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      await window.signOut(
+        window.auth
+      );
+
+      location.reload();
+
+    } catch (error) {
+
+      console.error(error);
+
+      setStatus(
+        "Error al cerrar sesión.",
+        "error"
+      );
+
+    }
+
+  }
+);
 
 

@@ -51,13 +51,71 @@
       <a href="/acerca.html">Acerca de</a>
       <a href="/contacto.html">Contacto</a>
     </nav>
-    <a class="header-action" href="#planes">Actualizar</a>
+    <div class="header-right">
+
+      <a class="header-action" href="#planes">
+        👑 Actualizar
+      </a>
+
+      <div id="user-container" class="user-container">
+
+        <button id="login-button" class="secondary-button">
+          Iniciar sesión
+        </button>
+
+        <div id="user-profile" class="user-profile hidden">
+
+          <img
+            id="user-avatar"
+            class="user-avatar"
+            src=""
+            alt="Usuario"
+          >
+
+          <div id="user-menu" class="user-menu">
+
+            <div class="user-info">
+
+              <img
+                id="user-avatar-large"
+                class="user-avatar-large"
+                src=""
+                alt=""
+              >
+
+              <div>
+                <strong id="user-name"></strong>
+                <small id="user-email"></small>
+              </div>
+
+            </div>
+
+            <div class="user-plan">
+              👑 <span id="user-plan-text">Plan Gratis</span>
+            </div>
+
+            <button class="menu-item" disabled>
+              📄 Mis conversiones
+            </button>
+
+            <button class="menu-item" disabled>
+              ⚙ Configuración
+            </button>
+
+            <button id="logout-button" class="menu-item danger">
+              🚪 Cerrar sesión
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
   </header>
 
   <main>
-    <button id="login-button" class="secondary-button">
-      Iniciar sesión con Google
-    </button>
     <section class="hero" id="convertidor">
       <div class="hero-copy">
         <p class="eyebrow">Convertidor rapido de PDF</p>
@@ -252,6 +310,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signOut,
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -285,6 +344,7 @@ async function initFirebase() {
 
     // 👇 SOLO lo necesario
     window.signInWithPopup = signInWithPopup;
+    window.signOut = signOut;
 
     window.db = getFirestore(app);
     window.doc = doc;
